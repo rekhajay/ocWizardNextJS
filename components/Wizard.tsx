@@ -135,6 +135,9 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved, selectedTab: 
       console.log('Wizard opened - resetting to list-view', 'isManageMode:', isManageMode, 'ocId:', ocId);
       setCurrentStep('list-view');
       setSelectedTab('');
+      setEditingRow(null);
+      setSelectedRow(null);
+      resetForm();
     }
   }, [open, isManageMode, ocId]);
 
@@ -450,8 +453,10 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved, selectedTab: 
 
   const handleClose = () => {
     setSelectedTab('');
-    setCurrentStep('tab-selection');
+    setCurrentStep('list-view');
     setSaveStatus('idle');
+    setEditingRow(null);
+    setSelectedRow(null);
     onClose();
   };
 
