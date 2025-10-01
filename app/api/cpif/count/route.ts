@@ -3,6 +3,9 @@ import { DatabaseService } from '@/lib/services/databaseService';
 
 const dbService = new DatabaseService();
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 // GET /api/cpif/count?ocId=OC-GOPI-1 - Get count of wizard rows for a specific OC
 export async function GET(request: NextRequest) {
   try {
