@@ -140,6 +140,11 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved, selectedTab: 
     }
   }, [open, isManageMode, ocId]);
 
+  // Debug log when ocId changes
+  useEffect(() => {
+    console.log('Wizard ocId changed to:', ocId);
+  }, [ocId]);
+
   const loadEmployees = async () => {
     setLoadingEmployees(true);
     try {
@@ -171,8 +176,8 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved, selectedTab: 
         const filteredRows = ocId ? allRows.filter(row => row.ocId === ocId) : allRows;
         
         console.log('Loading wizard rows for OC:', ocId);
-        console.log('All rows:', allRows.length);
-        console.log('Filtered rows:', filteredRows.length);
+        console.log('All rows from DB:', allRows.map(row => ({ id: row.id, ocId: row.ocId, company: row.accountInfo?.legalName })));
+        console.log('Filtered rows for current OC:', filteredRows.map(row => ({ id: row.id, ocId: row.ocId, company: row.accountInfo?.legalName })));
         
         setWizardRows(filteredRows);
       }
