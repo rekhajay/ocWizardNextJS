@@ -21,8 +21,8 @@ export interface AccountInfo {
   zipCode: string;
   productService: string;
   estOpptyValue: string;
-  opportunityPartner: Employee;
-  taxDeliveryPartner: Employee;
+  opportunityPartner?: Employee;
+  taxDeliveryPartner?: Employee;
   bdSalesSupport: string;
   leadSource: string;
   leadSourceDetails: string;
@@ -32,11 +32,11 @@ export interface AccountInfo {
 
 export interface WorkdayInfo {
   needProjectInWorkday: boolean;
-  customerCollectionsLead: Employee;
-  projectDeliveryLead: Employee;
-  projectManager: Employee;
-  asstProjectManager: Employee;
-  projectBillingSpecialist: Employee;
+  customerCollectionsLead?: Employee;
+  projectDeliveryLead?: Employee;
+  projectManager?: Employee;
+  asstProjectManager?: Employee;
+  projectBillingSpecialist?: Employee;
   serviceCode: string;
   taxYearEnd: string;
   renewableProject: boolean;
@@ -89,7 +89,7 @@ export interface PeteKlingerInfo {
 }
 
 export interface RevenueForecast {
-  [key: string]: string; // "0-0": "1000", "0-1": "2000", etc.
+  [key: string]: number; // "0-0": 1000, "0-1": 2000, etc.
 }
 
 export interface OnboardingInfo {
@@ -102,7 +102,7 @@ export interface CPIFDocument {
   id: string;
   timestamp: Date;
   createdBy: string; // Azure AD user ID
-  wizardType: 'New Client-Entity (Need a CUS#)' | 'Existing Client-Entity (Has a CUS#)' | 'New Client-Individual (Need a CUS#)' | 'Existing Client-Individual (Has a CUS#)';
+  wizardType: 'New Client-Entity (Need a CUS#)' | 'New Project (Have a CUS#)' | 'Use if Opportunity is in CRM';
   
   // Form sections
   accountInfo: AccountInfo;

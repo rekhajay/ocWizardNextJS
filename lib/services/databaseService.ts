@@ -25,7 +25,7 @@ const getConfig = () => {
     server,
     database,
     authentication: {
-      type: 'azure-active-directory-service-principal-secret',
+            type: 'azure-active-directory-service-principal-secret' as const,
       options: {
         clientId,
         clientSecret,
@@ -96,7 +96,7 @@ export class DatabaseService {
       .input('lastModified', sql.DateTime2, cpifData.lastModified)
       .input('version', sql.Int, cpifData.version)
       .input('accountInfo', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.accountInfo))
-      .input('workdayProjectContract', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.workdayProjectContract))
+      .input('workdayInfo', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.workdayInfo))
       .input('taxAdmin', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.taxAdmin))
       .input('peTms', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.peTms))
       .input('invoice', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.invoice))
@@ -107,11 +107,11 @@ export class DatabaseService {
       .query(`
         INSERT INTO CPIFDocuments (
           id, timestamp, createdBy, wizardType, status, lastModified, version,
-          accountInfo, workdayProjectContract, taxAdmin, peTms, invoice,
+          accountInfo, workdayInfo, taxAdmin, peTms, invoice,
           engagement, peteKlinger, revenueForecast, onboarding
         ) VALUES (
           @id, @timestamp, @createdBy, @wizardType, @status, @lastModified, @version,
-          @accountInfo, @workdayProjectContract, @taxAdmin, @peTms, @invoice,
+          @accountInfo, @workdayInfo, @taxAdmin, @peTms, @invoice,
           @engagement, @peteKlinger, @revenueForecast, @onboarding
         )
       `);
@@ -145,7 +145,7 @@ export class DatabaseService {
       lastModified: record.lastModified,
       version: record.version,
       accountInfo: JSON.parse(record.accountInfo),
-      workdayProjectContract: JSON.parse(record.workdayProjectContract),
+      workdayInfo: JSON.parse(record.workdayInfo),
       taxAdmin: JSON.parse(record.taxAdmin),
       peTms: JSON.parse(record.peTms),
       invoice: JSON.parse(record.invoice),
@@ -175,7 +175,7 @@ export class DatabaseService {
       lastModified: record.lastModified,
       version: record.version,
       accountInfo: JSON.parse(record.accountInfo),
-      workdayProjectContract: JSON.parse(record.workdayProjectContract),
+      workdayInfo: JSON.parse(record.workdayInfo),
       taxAdmin: JSON.parse(record.taxAdmin),
       peTms: JSON.parse(record.peTms),
       invoice: JSON.parse(record.invoice),
@@ -203,7 +203,7 @@ export class DatabaseService {
       .input('lastModified', sql.DateTime2, cpifData.lastModified)
       .input('version', sql.Int, cpifData.version)
       .input('accountInfo', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.accountInfo))
-      .input('workdayProjectContract', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.workdayProjectContract))
+      .input('workdayInfo', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.workdayInfo))
       .input('taxAdmin', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.taxAdmin))
       .input('peTms', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.peTms))
       .input('invoice', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.invoice))
@@ -220,7 +220,7 @@ export class DatabaseService {
           lastModified = @lastModified,
           version = @version,
           accountInfo = @accountInfo,
-          workdayProjectContract = @workdayProjectContract,
+          workdayInfo = @workdayInfo,
           taxAdmin = @taxAdmin,
           peTms = @peTms,
           invoice = @invoice,
