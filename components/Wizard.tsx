@@ -140,6 +140,8 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved, selectedTab: 
       setSelectedTab('');
       setEditingRow(null);
       setSelectedRow(null);
+      // Force load wizard rows when wizard opens
+      loadWizardRows();
     }
   }, [open, isManageMode, ocId]);
 
