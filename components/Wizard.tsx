@@ -24,9 +24,11 @@ interface WizardProps {
 
 export default function Wizard({ open, onClose, ocId, onCPIFSaved, selectedTab: propSelectedTab, isPageMode = false, isManageMode = false }: WizardProps) {
   const [selectedTab, setSelectedTab] = useState<WizardTab | ''>(propSelectedTab || '');
-  const [currentStep, setCurrentStep] = useState<'list-view' | 'tab-selection' | 'single-row'>(
-    propSelectedTab ? 'single-row' : 'list-view'
-  );
+  const [currentStep, setCurrentStep] = useState<'list-view' | 'tab-selection' | 'single-row'>(() => {
+    const initialState = propSelectedTab ? 'single-row' : 'list-view';
+    console.log('Wizard initial currentStep:', initialState, 'propSelectedTab:', propSelectedTab, 'isManageMode:', isManageMode, 'ocId:', ocId);
+    return initialState;
+  });
   
   const [employeeService] = useState(new EmployeeService());
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -126,6 +128,15 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved, selectedTab: 
       loadWizardRows();
     }
   }, [currentStep]);
+
+  // Reset to list-view when wizard opens (for both Create and Manage)
+  useEffect(() => {
+    if (open) {
+      console.log('Wizard opened - resetting to list-view', 'isManageMode:', isManageMode, 'ocId:', ocId);
+      setCurrentStep('list-view');
+      setSelectedTab('');
+    }
+  }, [open, isManageMode, ocId]);
 
   const loadEmployees = async () => {
     setLoadingEmployees(true);
