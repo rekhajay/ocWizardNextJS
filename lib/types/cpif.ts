@@ -116,7 +116,7 @@ export interface CPIFDocument {
   onboarding: OnboardingInfo;
   
   // Metadata
-  status: 'Draft' | 'Submitted' | 'Approved' | 'Rejected';
+  status: 'Draft' | 'Submitted' | 'Approved' | 'Rejected' | 'Completed';
   lastModified: Date;
   version: number;
 }
