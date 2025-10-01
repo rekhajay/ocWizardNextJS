@@ -211,30 +211,30 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved, selectedTab: 
     setReferringEmployee(employees.find(emp => emp.id === row.accountInfo.referringEmployee?.id) || null);
     
     // Workday Project & Contract
-    setNeedProjectInWorkday(row.workdayProjectContract.needProjectInWorkday ? 'Yes' : 'No');
-    setCustomerCollectionsLead(employees.find(emp => emp.id === row.workdayProjectContract.customerCollectionsLead?.id) || null);
-    setProjectDeliveryLead(employees.find(emp => emp.id === row.workdayProjectContract.projectDeliveryLead?.id) || null);
-    setProjectManager(employees.find(emp => emp.id === row.workdayProjectContract.projectManager?.id) || null);
-    setAsstProjectManager(employees.find(emp => emp.id === row.workdayProjectContract.asstProjectManager?.id) || null);
-    setProjectBillingSpecialist(employees.find(emp => emp.id === row.workdayProjectContract.projectBillingSpecialist?.id) || null);
-    setServiceCode(row.workdayProjectContract.serviceCode);
-    setTaxYearEnd(row.workdayProjectContract.taxYearEnd);
-    setRenewableProject(row.workdayProjectContract.renewableProject ? 'Yes' : 'No');
-    setProjectStartDate(row.workdayProjectContract.projectStartDate);
-    setProjectEndDate(row.workdayProjectContract.projectEndDate);
-    setTaxForm(row.workdayProjectContract.taxForm);
-    setNextDueDate(row.workdayProjectContract.nextDueDate);
-    setDateOfDeath(row.workdayProjectContract.dateOfDeath);
-    setContractType(row.workdayProjectContract.contractType);
-    setTotalEstimatedHours(row.workdayProjectContract.totalEstimatedHours.toString());
-    setEstimatedRealizationYear1(row.workdayProjectContract.estimatedRealizationYear1.toString());
-    setContractRateSheet(row.workdayProjectContract.contractRateSheet);
-    setTotalContractAmount(row.workdayProjectContract.totalContractAmount.toString());
-    setAdminFeePercent(row.workdayProjectContract.adminFeePercent.toString());
-    setAdminFeeIncludedExcluded(row.workdayProjectContract.adminFeeIncludedExcluded);
-    setOnboardingFeePercent(row.workdayProjectContract.onboardingFeePercent.toString());
-    setOnboardingFeeAmount(row.workdayProjectContract.onboardingFeeAmount.toString());
-    setSuggestedWorkdayParentName(row.workdayProjectContract.suggestedWorkdayParentName);
+    setNeedProjectInWorkday(row.workdayInfo.needProjectInWorkday ? 'Yes' : 'No');
+    setCustomerCollectionsLead(employees.find(emp => emp.id === row.workdayInfo.customerCollectionsLead?.id) || null);
+    setProjectDeliveryLead(employees.find(emp => emp.id === row.workdayInfo.projectDeliveryLead?.id) || null);
+    setProjectManager(employees.find(emp => emp.id === row.workdayInfo.projectManager?.id) || null);
+    setAsstProjectManager(employees.find(emp => emp.id === row.workdayInfo.asstProjectManager?.id) || null);
+    setProjectBillingSpecialist(employees.find(emp => emp.id === row.workdayInfo.projectBillingSpecialist?.id) || null);
+    setServiceCode(row.workdayInfo.serviceCode);
+    setTaxYearEnd(row.workdayInfo.taxYearEnd);
+    setRenewableProject(row.workdayInfo.renewableProject ? 'Yes' : 'No');
+    setProjectStartDate(row.workdayInfo.projectStartDate);
+    setProjectEndDate(row.workdayInfo.projectEndDate);
+    setTaxForm(row.workdayInfo.taxForm);
+    setNextDueDate(row.workdayInfo.nextDueDate);
+    setDateOfDeath(row.workdayInfo.dateOfDeath);
+    setContractType(row.workdayInfo.contractType);
+    setTotalEstimatedHours(row.workdayInfo.totalEstimatedHours.toString());
+    setEstimatedRealizationYear1(row.workdayInfo.estimatedRealizationYear1.toString());
+    setContractRateSheet(row.workdayInfo.contractRateSheet);
+    setTotalContractAmount(row.workdayInfo.totalContractAmount.toString());
+    setAdminFeePercent(row.workdayInfo.adminFeePercent.toString());
+    setAdminFeeIncludedExcluded(row.workdayInfo.adminFeeIncludedExcluded);
+    setOnboardingFeePercent(row.workdayInfo.onboardingFeePercent.toString());
+    setOnboardingFeeAmount(row.workdayInfo.onboardingFeeAmount.toString());
+    setSuggestedWorkdayParentName(row.workdayInfo.suggestedWorkdayParentName);
     
     // Tax Admin
     setElSigned(row.taxAdmin.elSigned ? 'Yes' : 'No');
@@ -318,7 +318,7 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved, selectedTab: 
           lsFreeText: lsFreeText,
           referringEmployee: referringEmployee
         },
-        workdayProjectContract: {
+        workdayInfo: {
           needProjectInWorkday: needProjectInWorkday === 'Yes',
           customerCollectionsLead: customerCollectionsLead,
           projectDeliveryLead: projectDeliveryLead,
