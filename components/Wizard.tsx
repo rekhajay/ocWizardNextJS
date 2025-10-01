@@ -137,7 +137,6 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved, selectedTab: 
       setSelectedTab('');
       setEditingRow(null);
       setSelectedRow(null);
-      resetForm();
     }
   }, [open, isManageMode, ocId]);
 
