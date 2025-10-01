@@ -125,6 +125,8 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved, selectedTab: 
   useEffect(() => {
     loadEmployees();
     if (currentStep === 'list-view') {
+      console.log('currentStep is list-view, calling loadWizardRows');
+      alert('About to load wizard rows...');
       loadWizardRows();
     }
   }, [currentStep]);
@@ -133,6 +135,7 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved, selectedTab: 
   useEffect(() => {
     if (open) {
       console.log('Wizard opened - resetting to list-view', 'isManageMode:', isManageMode, 'ocId:', ocId);
+      alert(`Wizard opened - setting currentStep to list-view. Current step was: ${currentStep}`);
       setCurrentStep('list-view');
       setSelectedTab('');
       setEditingRow(null);

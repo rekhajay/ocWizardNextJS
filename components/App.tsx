@@ -865,7 +865,6 @@ export default function App() {
   const [congaLMStatus, setCongaLMStatus] = useState<"Connected" | "Disconnected" | "Syncing">("Connected");
   const [lastSyncTime, setLastSyncTime] = useState<number>(Date.now());
   const [elSuccess, setElSuccess] = useState<null | { ocId: string; data: ELStatus; warnings: string[] }>(null);
-  const [showWizard, setShowWizard] = useState(false);
   const [showContainerWizard, setShowContainerWizard] = useState(false);
   const [currentOCId, setCurrentOCId] = useState<string | null>(null); // Track which OC the wizard is for
   const [savedCPIFs, setSavedCPIFs] = useState<Record<string, boolean>>({});
@@ -1500,9 +1499,6 @@ export default function App() {
         {originatingOC && <ViewGrid oc={originatingOC} />}
       </Modal>
 
-      {/* Container Creation Wizard */}
-      <Wizard open={showWizard} onClose={() => setShowWizard(false)} />
-      
       {/* Container Creation Wizard */}
               <Wizard 
                 open={showContainerWizard} 
