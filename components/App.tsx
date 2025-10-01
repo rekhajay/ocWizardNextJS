@@ -905,14 +905,17 @@ export default function App() {
         const result = await response.json();
         const rows = result.data || [];
         
-        // Count rows per OC (assuming OC ID is stored in the wizard data)
+        // Count rows per OC (using the actual OC ID from the wizard data)
         const countByOC: Record<string, number> = {};
         rows.forEach((row: any) => {
-          // If the row has an ocId field, use it; otherwise default to 'default'
-          const ocId = row.ocId || 'default';
-          countByOC[ocId] = (countByOC[ocId] || 0) + 1;
+          // Use the ocId field from the wizard row
+          if (row.ocId) {
+            countByOC[row.ocId] = (countByOC[row.ocId] || 0) + 1;
+          }
         });
         
+        console.log('Wizard rows count by OC:', countByOC);
+        console.log('Available OCs:', ocs.map(oc => ({ id: oc.id, name: oc.ocName })));
         setWizardRowsCount(countByOC);
       }
     } catch (error) {
@@ -924,6 +927,13 @@ export default function App() {
   useEffect(() => {
     loadWizardRowsCount();
   }, []);
+
+  // Function to check if an OC has existing wizard rows
+  const hasWizardRows = (ocId: string): boolean => {
+    const count = wizardRowsCount[ocId] || 0;
+    console.log(`Checking wizard rows for OC ${ocId}: ${count} rows`);
+    return count > 0;
+  };
 
   function canDeleteEL(oc: OpportunityContainer) {
     // Can delete if EL exists
@@ -1298,9 +1308,9 @@ export default function App() {
                                 setCurrentOCId(oc.id);
                                 setShowContainerWizard(true);
                               }}
-                              title={(wizardRowsCount[oc.id] || 0) > 0 ? "Manage Container Wizard" : "Create Container Wizard"}
+                              title={hasWizardRows(oc.id) ? "Manage Container Wizard" : "Create Container Wizard"}
                             >
-                              {(wizardRowsCount[oc.id] || 0) > 0 ? "Manage Container Wizard" : "Create Container Wizard"}
+                              {hasWizardRows(oc.id) ? "Manage Container Wizard" : "Create Container Wizard"}
                             </button>
                           </div>
                           <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-600">
@@ -1504,7 +1514,7 @@ export default function App() {
                   // Refresh wizard rows count after saving
                   loadWizardRowsCount();
                 }}
-                isManageMode={currentOCId ? (wizardRowsCount[currentOCId] || 0) > 0 : false}
+                isManageMode={currentOCId ? hasWizardRows(currentOCId) : false}
               />
     </div>
   );
