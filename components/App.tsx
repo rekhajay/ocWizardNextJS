@@ -868,7 +868,8 @@ export default function App() {
   const [showWizard, setShowWizard] = useState(false);
   const [showContainerWizard, setShowContainerWizard] = useState(false);
   const [currentOCId, setCurrentOCId] = useState<string | null>(null); // Track which OC the wizard is for
-  const [savedCPIFs, setSavedCPIFs] = useState<Record<string, boolean>>({}); // Track which OCs have saved CPIFs
+  const [savedCPIFs, setSavedCPIFs] = useState<Record<string, boolean>>({});
+  const [wizardRowsCount, setWizardRowsCount] = useState<Record<string, number>>({}); // Track which OCs have saved CPIFs
 
   const accountOptions = useMemo(() => {
     const names = new Set<string>();
@@ -896,6 +897,33 @@ export default function App() {
     // Enabled only if CIS completed & approved AND no existing EL
     return oc.cisStage === "Completed" && oc.cisStatus === "Approved" && !oc.elStatus;
   }
+
+  const loadWizardRowsCount = async () => {
+    try {
+      const response = await fetch('/api/cpif');
+      if (response.ok) {
+        const result = await response.json();
+        const rows = result.data || [];
+        
+        // Count rows per OC (assuming OC ID is stored in the wizard data)
+        const countByOC: Record<string, number> = {};
+        rows.forEach((row: any) => {
+          // If the row has an ocId field, use it; otherwise default to 'default'
+          const ocId = row.ocId || 'default';
+          countByOC[ocId] = (countByOC[ocId] || 0) + 1;
+        });
+        
+        setWizardRowsCount(countByOC);
+      }
+    } catch (error) {
+      console.error('Failed to load wizard rows count:', error);
+    }
+  };
+
+  // Load wizard rows count on component mount
+  useEffect(() => {
+    loadWizardRowsCount();
+  }, []);
 
   function canDeleteEL(oc: OpportunityContainer) {
     // Can delete if EL exists
@@ -1270,9 +1298,9 @@ export default function App() {
                                 setCurrentOCId(oc.id);
                                 setShowContainerWizard(true);
                               }}
-                              title={savedCPIFs[oc.id] ? "Manage Container Wizard" : "Create Container Wizard"}
+                              title={(wizardRowsCount[oc.id] || 0) > 0 ? "Manage Container Wizard" : "Create Container Wizard"}
                             >
-                              {savedCPIFs[oc.id] ? "Manage Container Wizard" : "Create Container Wizard"}
+                              {(wizardRowsCount[oc.id] || 0) > 0 ? "Manage Container Wizard" : "Create Container Wizard"}
                             </button>
                           </div>
                           <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-600">
@@ -1464,16 +1492,20 @@ export default function App() {
       <Wizard open={showWizard} onClose={() => setShowWizard(false)} />
       
       {/* Container Creation Wizard */}
-      <Wizard 
-        open={showContainerWizard} 
-        onClose={() => {
-          setShowContainerWizard(false);
-          setCurrentOCId(null);
-        }}
-        ocId={currentOCId || undefined}
-        onCPIFSaved={(ocId) => setSavedCPIFs(prev => ({ ...prev, [ocId]: true }))}
-        isManageMode={currentOCId ? savedCPIFs[currentOCId] : false}
-      />
+              <Wizard 
+                open={showContainerWizard} 
+                onClose={() => {
+                  setShowContainerWizard(false);
+                  setCurrentOCId(null);
+                }}
+                ocId={currentOCId || undefined}
+                onCPIFSaved={(ocId) => {
+                  setSavedCPIFs(prev => ({ ...prev, [ocId]: true }));
+                  // Refresh wizard rows count after saving
+                  loadWizardRowsCount();
+                }}
+                isManageMode={currentOCId ? (wizardRowsCount[currentOCId] || 0) > 0 : false}
+              />
     </div>
   );
 }

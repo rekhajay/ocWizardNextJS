@@ -297,6 +297,7 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved, selectedTab: 
         timestamp: new Date(),
         createdBy: 'current-user-id',
         wizardType: selectedTab as WizardTab,
+        ocId: ocId, // Store the OC ID this wizard row belongs to
         accountInfo: {
           legalName: newAccountLegalName,
           primaryContact: primaryContactName,

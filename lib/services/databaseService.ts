@@ -92,6 +92,7 @@ export class DatabaseService {
       .input('timestamp', sql.DateTime2, cpifData.timestamp)
       .input('createdBy', sql.VarChar(100), cpifData.createdBy)
       .input('wizardType', sql.VarChar(100), cpifData.wizardType)
+      .input('ocId', sql.VarChar(50), cpifData.ocId || null)
       .input('status', sql.VarChar(50), cpifData.status)
       .input('lastModified', sql.DateTime2, cpifData.lastModified)
       .input('version', sql.Int, cpifData.version)
@@ -106,11 +107,11 @@ export class DatabaseService {
       .input('onboarding', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.onboarding))
       .query(`
         INSERT INTO CPIFDocuments (
-          id, timestamp, createdBy, wizardType, status, lastModified, version,
+          id, timestamp, createdBy, wizardType, ocId, status, lastModified, version,
           accountInfo, workdayInfo, taxAdmin, peTms, invoice,
           engagement, peteKlinger, revenueForecast, onboarding
         ) VALUES (
-          @id, @timestamp, @createdBy, @wizardType, @status, @lastModified, @version,
+          @id, @timestamp, @createdBy, @wizardType, @ocId, @status, @lastModified, @version,
           @accountInfo, @workdayInfo, @taxAdmin, @peTms, @invoice,
           @engagement, @peteKlinger, @revenueForecast, @onboarding
         )
@@ -141,6 +142,7 @@ export class DatabaseService {
       timestamp: record.timestamp,
       createdBy: record.createdBy,
       wizardType: record.wizardType,
+      ocId: record.ocId,
       status: record.status,
       lastModified: record.lastModified,
       version: record.version,
@@ -171,6 +173,7 @@ export class DatabaseService {
       timestamp: record.timestamp,
       createdBy: record.createdBy,
       wizardType: record.wizardType,
+      ocId: record.ocId,
       status: record.status,
       lastModified: record.lastModified,
       version: record.version,
@@ -199,6 +202,7 @@ export class DatabaseService {
       .input('timestamp', sql.DateTime2, cpifData.timestamp)
       .input('createdBy', sql.VarChar(100), cpifData.createdBy)
       .input('wizardType', sql.VarChar(100), cpifData.wizardType)
+      .input('ocId', sql.VarChar(50), cpifData.ocId || null)
       .input('status', sql.VarChar(50), cpifData.status)
       .input('lastModified', sql.DateTime2, cpifData.lastModified)
       .input('version', sql.Int, cpifData.version)
@@ -216,6 +220,7 @@ export class DatabaseService {
           timestamp = @timestamp,
           createdBy = @createdBy,
           wizardType = @wizardType,
+          ocId = @ocId,
           status = @status,
           lastModified = @lastModified,
           version = @version,
