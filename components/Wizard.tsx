@@ -125,8 +125,6 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved, selectedTab: 
   useEffect(() => {
     loadEmployees();
     if (currentStep === 'list-view') {
-      console.log('currentStep is list-view, calling loadWizardRows');
-      alert('About to load wizard rows...');
       loadWizardRows();
     }
   }, [currentStep]);
@@ -134,8 +132,6 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved, selectedTab: 
   // Reset to list-view when wizard opens (for both Create and Manage)
   useEffect(() => {
     if (open) {
-      console.log('Wizard opened - resetting to list-view', 'isManageMode:', isManageMode, 'ocId:', ocId);
-      alert(`Wizard opened - setting currentStep to list-view. Current step was: ${currentStep}`);
       setCurrentStep('list-view');
       setSelectedTab('');
       setEditingRow(null);
@@ -145,11 +141,6 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved, selectedTab: 
     }
   }, [open, isManageMode, ocId]);
 
-  // Debug log when ocId changes
-  useEffect(() => {
-    console.log('Wizard ocId changed to:', ocId);
-    alert(`Wizard received ocId: ${ocId}`);
-  }, [ocId]);
 
   const loadEmployees = async () => {
     setLoadingEmployees(true);
@@ -184,8 +175,6 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved, selectedTab: 
         console.log('Loading wizard rows for OC:', ocId);
         console.log('All rows from DB:', allRows.map(row => ({ id: row.id, ocId: row.ocId, company: row.accountInfo?.legalName })));
         console.log('Filtered rows for current OC:', filteredRows.map(row => ({ id: row.id, ocId: row.ocId, company: row.accountInfo?.legalName })));
-        
-        alert(`Loading wizard rows for OC: ${ocId}\nAll rows: ${allRows.length}\nFiltered rows: ${filteredRows.length}`);
         
         setWizardRows(filteredRows);
       }
