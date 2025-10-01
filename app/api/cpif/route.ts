@@ -9,10 +9,10 @@ export async function GET() {
   try {
     const cpifs = await dbService.getAllCPIFs();
     return NextResponse.json({ success: true, data: cpifs });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching CPIF documents:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch CPIF documents' },
+      { success: false, error: `Failed to fetch CPIF documents: ${error?.message || 'Unknown error'}` },
       { status: 500 }
     );
   }
@@ -38,11 +38,11 @@ export async function POST(request: NextRequest) {
     const savedId = await dbService.saveCPIF(cpifData);
     console.log('API: Successfully saved CPIF with ID:', savedId);
     return NextResponse.json({ success: true, data: { id: savedId } });
-  } catch (error) {
+  } catch (error: any) {
     console.error('API: Error saving CPIF document:', error);
-    console.error('API: Error details:', error.message);
+    console.error('API: Error details:', error?.message || 'Unknown error');
     return NextResponse.json(
-      { success: false, error: `Failed to save CPIF document: ${error.message}` },
+      { success: false, error: `Failed to save CPIF document: ${error?.message || 'Unknown error'}` },
       { status: 500 }
     );
   }

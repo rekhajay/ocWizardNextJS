@@ -20,10 +20,10 @@ export async function GET(
     }
 
     return NextResponse.json({ success: true, data: cpif });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching CPIF document:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch CPIF document' },
+      { success: false, error: `Failed to fetch CPIF document: ${error?.message || 'Unknown error'}` },
       { status: 500 }
     );
   }
@@ -42,10 +42,10 @@ export async function PUT(
     
     await dbService.updateCPIF(cpifData);
     return NextResponse.json({ success: true, data: { id: params.id } });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating CPIF document:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to update CPIF document' },
+      { success: false, error: `Failed to update CPIF document: ${error?.message || 'Unknown error'}` },
       { status: 500 }
     );
   }
@@ -59,10 +59,10 @@ export async function DELETE(
   try {
     await dbService.deleteCPIF(params.id);
     return NextResponse.json({ success: true, data: { id: params.id } });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error deleting CPIF document:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to delete CPIF document' },
+      { success: false, error: `Failed to delete CPIF document: ${error?.message || 'Unknown error'}` },
       { status: 500 }
     );
   }
