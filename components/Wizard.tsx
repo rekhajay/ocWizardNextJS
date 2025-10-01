@@ -152,7 +152,16 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved, selectedTab: 
       const response = await fetch('/api/cpif');
       if (response.ok) {
         const result = await response.json();
-        setWizardRows(result.data || []);
+        const allRows: CPIFDocument[] = result.data || [];
+        
+        // Filter rows by the ocId passed to the Wizard component
+        const filteredRows = ocId ? allRows.filter(row => row.ocId === ocId) : allRows;
+        
+        console.log('Loading wizard rows for OC:', ocId);
+        console.log('All rows:', allRows.length);
+        console.log('Filtered rows:', filteredRows.length);
+        
+        setWizardRows(filteredRows);
       }
     } catch (error) {
       console.error('Failed to load wizard rows:', error);
