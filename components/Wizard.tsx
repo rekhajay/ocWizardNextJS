@@ -143,6 +143,7 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved, selectedTab: 
   // Debug log when ocId changes
   useEffect(() => {
     console.log('Wizard ocId changed to:', ocId);
+    alert(`Wizard received ocId: ${ocId}`);
   }, [ocId]);
 
   const loadEmployees = async () => {
@@ -178,6 +179,8 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved, selectedTab: 
         console.log('Loading wizard rows for OC:', ocId);
         console.log('All rows from DB:', allRows.map(row => ({ id: row.id, ocId: row.ocId, company: row.accountInfo?.legalName })));
         console.log('Filtered rows for current OC:', filteredRows.map(row => ({ id: row.id, ocId: row.ocId, company: row.accountInfo?.legalName })));
+        
+        alert(`Loading wizard rows for OC: ${ocId}\nAll rows: ${allRows.length}\nFiltered rows: ${filteredRows.length}`);
         
         setWizardRows(filteredRows);
       }
