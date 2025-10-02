@@ -316,12 +316,12 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved, selectedTab: 
     setSaveStatus('saving');
     
     try {
-      const cpifData: CPIFDocument = {
-        id: editingRow ? editingRow.id : `cpif-${Date.now()}`,
-        timestamp: new Date(),
-        createdBy: 'current-user-id',
-        wizardType: selectedTab as WizardTab,
-        ocId: ocId, // Store the OC ID this wizard row belongs to
+    const cpifData: CPIFDocument = {
+      id: editingRow ? editingRow.id : `cpif-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      createdBy: 'current-user-id',
+      wizardType: selectedTab as WizardTab,
+      ocId: ocId, // Store the OC ID this wizard row belongs to
         accountInfo: {
           legalName: newAccountLegalName,
           primaryContact: primaryContactName,
@@ -402,7 +402,7 @@ export default function Wizard({ open, onClose, ocId, onCPIFSaved, selectedTab: 
           opportunityName: opportunityName
         },
         status: 'Draft',
-        lastModified: new Date(),
+        lastModified: new Date().toISOString(),
         version: 1
       };
 

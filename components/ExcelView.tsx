@@ -10,7 +10,7 @@ const ExcelView: React.FC<ExcelViewProps> = ({ ocId }) => {
   const [loading, setLoading] = useState(true);
   const [editingRow, setEditingRow] = useState<string | null>(null);
   const [editingField, setEditingField] = useState<string | null>(null);
-  const [tempData, setTempData] = useState<Partial<CPIFDocument>>({});
+  const [tempData, setTempData] = useState<Record<string, any>>({});
 
   // Load wizard rows
   const loadWizardRows = async () => {
@@ -47,119 +47,76 @@ const ExcelView: React.FC<ExcelViewProps> = ({ ocId }) => {
       version: 1,
       accountInfo: {
         legalName: '',
+        primaryContact: '',
+        primaryContactTitle: '',
+        primaryContactEmail: '',
         industry: 'Technology',
         entityType: 'Corporation',
+        address: '',
+        city: '',
+        state: '',
+        zipCode: '',
         productService: 'Software',
-        leadSource: 'Website',
         estOpptyValue: '',
-        adminFeePercent: '',
-        onboardingFeePercent: '',
         opportunityPartner: undefined,
-        opportunityPartnerName: '',
-        opportunityPartnerEmail: '',
-        opportunityPartnerPhone: '',
-        opportunityPartnerTitle: '',
-        opportunityPartnerDepartment: '',
-        opportunityPartnerManager: undefined,
-        opportunityPartnerManagerName: '',
-        opportunityPartnerManagerEmail: '',
-        opportunityPartnerManagerPhone: '',
-        opportunityPartnerManagerTitle: '',
-        opportunityPartnerManagerDepartment: '',
-        estimatedRealizationYear1: '',
-        estimatedRealizationYear2: '',
-        estimatedRealizationYear3: '',
-        estimatedRealizationYear4: '',
-        estimatedRealizationYear5: '',
-        estimatedRealizationYear6: '',
-        estimatedRealizationYear7: '',
-        estimatedRealizationYear8: '',
-        estimatedRealizationYear9: '',
-        estimatedRealizationYear10: ''
+        taxDeliveryPartner: undefined,
+        bdSalesSupport: '',
+        leadSource: 'Website',
+        leadSourceDetails: '',
+        lsFreeText: '',
+        referringEmployee: undefined
       },
       workdayInfo: {
-        workdayProjectContract: '',
-        workdayProjectContractName: '',
-        workdayProjectContractEmail: '',
-        workdayProjectContractPhone: '',
-        workdayProjectContractTitle: '',
-        workdayProjectContractDepartment: '',
-        workdayProjectContractManager: undefined,
-        workdayProjectContractManagerName: '',
-        workdayProjectContractManagerEmail: '',
-        workdayProjectContractManagerPhone: '',
-        workdayProjectContractManagerTitle: '',
-        workdayProjectContractManagerDepartment: ''
+        needProjectInWorkday: false,
+        customerCollectionsLead: undefined,
+        projectDeliveryLead: undefined,
+        projectManager: undefined,
+        asstProjectManager: undefined,
+        projectBillingSpecialist: undefined,
+        serviceCode: '',
+        taxYearEnd: '',
+        renewableProject: false,
+        projectStartDate: '',
+        projectEndDate: '',
+        taxForm: '',
+        nextDueDate: '',
+        dateOfDeath: '',
+        contractType: '',
+        totalEstimatedHours: 0,
+        estimatedRealizationYear1: '',
+        contractRateSheet: '',
+        totalContractAmount: 0,
+        adminFeePercent: '',
+        adminFeeIncludedExcluded: 'Included',
+        onboardingFeePercent: '',
+        onboardingFeeAmount: 0,
+        suggestedWorkdayParentName: ''
       },
       taxAdmin: {
-        taxAdmin: '',
-        taxAdminName: '',
-        taxAdminEmail: '',
-        taxAdminPhone: '',
-        taxAdminTitle: '',
-        taxAdminDepartment: '',
-        taxAdminManager: undefined,
-        taxAdminManagerName: '',
-        taxAdminManagerEmail: '',
-        taxAdminManagerPhone: '',
-        taxAdminManagerTitle: '',
-        taxAdminManagerDepartment: ''
+        elSigned: false,
+        authorized7216: false
       },
       peTms: {
-        peTms: '',
-        peTmsName: '',
-        peTmsEmail: '',
-        peTmsPhone: '',
-        peTmsTitle: '',
-        peTmsDepartment: '',
-        peTmsManager: undefined,
-        peTmsManagerName: '',
-        peTmsManagerEmail: '',
-        peTmsManagerPhone: '',
-        peTmsManagerTitle: '',
-        peTmsManagerDepartment: ''
+        connectedToPEOrTMS: '',
+        nameOfRelatedPEFundTMSCustomer: ''
       },
       invoice: {
-        invoice: '',
-        invoiceName: '',
-        invoiceEmail: '',
-        invoicePhone: '',
-        invoiceTitle: '',
-        invoiceDepartment: '',
-        invoiceManager: undefined,
-        invoiceManagerName: '',
-        invoiceManagerEmail: '',
-        invoiceManagerPhone: '',
-        invoiceManagerTitle: '',
-        invoiceManagerDepartment: ''
+        invoiceType: '',
+        consolidatedBillingCustomerName: '',
+        consolidatedBillingExistingSchedule: '',
+        additionalCustomerContacts: '',
+        additionalCustomerContactEmails: '',
+        invoiceRecipientNames: '',
+        invoiceRecipientEmails: ''
       },
       engagement: {
-        engagement: '',
-        engagementName: '',
-        engagementEmail: '',
-        engagementPhone: '',
-        engagementTitle: '',
-        engagementDepartment: '',
-        engagementManager: undefined,
-        engagementManagerName: '',
-        engagementManagerEmail: '',
-        engagementManagerPhone: '',
-        engagementManagerTitle: '',
-        engagementManagerDepartment: ''
+        partnerSigningEL: '',
+        consultingServicesDescription: ''
       },
       peteKlinger: {
-        peteKlinger: '',
-        peteKlingerName: '',
-        peteKlingerEmail: '',
-        peteKlingerPhone: '',
-        peteKlingerTitle: '',
-        peteKlingerDepartment: '',
-        peteKlingerManager: undefined,
-        peteKlingerManagerName: '',
-        peteKlingerManagerEmail: '',
-        peteKlingerManagerPhone: '',
-        peteKlingerManagerTitle: '',
-        peteKlingerManagerDepartment: ''
+        documentDelivery: '',
+        invoiceMemo: '',
+        billToContact: ''
       },
       revenueForecast: {
         'January 2024': 0,
@@ -235,7 +192,7 @@ const ExcelView: React.FC<ExcelViewProps> = ({ ocId }) => {
   const updateField = (rowId: string, field: string, value: any) => {
     setWizardRows(prev => prev.map(row => {
       if (row.id === rowId) {
-        const updatedRow = { ...row };
+        const updatedRow = JSON.parse(JSON.stringify(row)); // Deep clone
         const fieldParts = field.split('.');
         let current = updatedRow as any;
         for (let i = 0; i < fieldParts.length - 1; i++) {
@@ -370,7 +327,7 @@ const ExcelView: React.FC<ExcelViewProps> = ({ ocId }) => {
                     {editingRow === row.id && editingField === col.key ? (
                       <input
                         type="text"
-                        value={tempData[col.key] || getFieldValue(row, col.key)}
+                        value={tempData[col.key] !== undefined ? tempData[col.key] : getFieldValue(row, col.key)}
                         onChange={(e) => {
                           setTempData({ [col.key]: e.target.value });
                           updateField(row.id, col.key, e.target.value);

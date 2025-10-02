@@ -100,9 +100,9 @@ export interface OnboardingInfo {
 
 export interface CPIFDocument {
   id: string;
-  timestamp: Date;
+  timestamp: string; // ISO string format
   createdBy: string; // Azure AD user ID
-  wizardType: 'New Client-Entity (Need a CUS#)' | 'New Project (Have a CUS#)' | 'Use if Opportunity is in CRM';
+  wizardType: 'New Client-Entity (Need a CUS#)' | 'New Project (Have a CUS#)' | 'Use if Opportunity is in CRM' | 'New Container';
   ocId?: string; // Opportunity Container ID this wizard row belongs to
   
   // Form sections
@@ -118,7 +118,7 @@ export interface CPIFDocument {
   
   // Metadata
   status: 'Draft' | 'Submitted' | 'Approved' | 'Rejected' | 'Completed';
-  lastModified: Date;
+  lastModified: string; // ISO string format
   version: number;
 }
 
