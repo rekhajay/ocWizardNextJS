@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import Wizard from "./Wizard";
+import ExcelView from "./ExcelView";
 
 // ---------- Types ----------
 type Service = {
@@ -866,6 +867,7 @@ export default function App() {
   const [lastSyncTime, setLastSyncTime] = useState<number>(Date.now());
   const [elSuccess, setElSuccess] = useState<null | { ocId: string; data: ELStatus; warnings: string[] }>(null);
   const [showContainerWizard, setShowContainerWizard] = useState(false);
+  const [showExcelView, setShowExcelView] = useState(false);
   const [currentOCId, setCurrentOCId] = useState<string | null>(null); // Track which OC the wizard is for
   const [savedCPIFs, setSavedCPIFs] = useState<Record<string, boolean>>({});
   const [wizardRowsCount, setWizardRowsCount] = useState<Record<string, number>>({}); // Track which OCs have saved CPIFs
@@ -1311,6 +1313,16 @@ export default function App() {
                             >
                               {hasWizardRows(oc.id) ? "Manage Container Wizard" : "Create Container Wizard"}
                             </button>
+                            <button
+                              className="ml-2 rounded-xl bg-green-500 px-3 py-1.5 text-xs text-white hover:bg-green-600"
+                              onClick={() => {
+                                setCurrentOCId(oc.id);
+                                setShowExcelView(true);
+                              }}
+                              title="Excel View - Edit all wizard data in spreadsheet format"
+                            >
+                              Excel View
+                            </button>
                           </div>
                           <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-600">
                             <span>Lead: <b>{oc.leadAccount}</b> • Renewal: {monthName(oc.renewalMonth)} {oc.renewalYear}</span>
@@ -1512,6 +1524,29 @@ export default function App() {
                 }}
                 isManageMode={currentOCId ? hasWizardRows(currentOCId) : false}
               />
+
+      {/* Excel View Modal */}
+      {showExcelView && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-xl w-[95vw] h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-xl font-semibold">Excel View - {currentOCId}</h2>
+              <button
+                onClick={() => {
+                  setShowExcelView(false);
+                  setCurrentOCId(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-4">
+              <ExcelView ocId={currentOCId || ''} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
