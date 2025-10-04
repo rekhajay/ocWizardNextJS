@@ -163,6 +163,9 @@ export class DatabaseService {
         await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
       }
     }
+    
+    // This should never be reached due to the throw in the loop, but TypeScript needs it
+    throw new Error('Unexpected error: saveCPIF failed after all retries');
   }
 
   async getCPIF(id: string): Promise<CPIFDocument | null> {
