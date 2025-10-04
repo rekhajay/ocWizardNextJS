@@ -262,6 +262,36 @@ const ExcelGridView: React.FC<ExcelGridViewProps> = ({ ocId }) => {
     setCurrentColumn(0);
   };
 
+  // Duplicate selected row
+  const duplicateRow = () => {
+    if (!currentRow) {
+      alert('Please select a row to duplicate');
+      return;
+    }
+
+    const selectedRow = wizardRows.find(row => row.id === currentRow);
+    if (!selectedRow) {
+      alert('Selected row not found');
+      return;
+    }
+
+    // Create a new row with the same data but new ID and timestamp
+    const duplicatedRow: CPIFDocument = {
+      ...selectedRow,
+      id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: new Date().toISOString(),
+      lastModified: new Date().toISOString(),
+      version: 1,
+      status: 'Draft'
+    };
+    
+    setWizardRows(prev => [...prev, duplicatedRow]);
+    setEditingRow(duplicatedRow.id);
+    setEditingField(columnConfig[0].key);
+    setCurrentRow(duplicatedRow.id);
+    setCurrentColumn(0);
+  };
+
   // Auto-save row (for real-time saving without interrupting editing)
   const autoSaveRow = async (row: CPIFDocument) => {
     try {
@@ -723,6 +753,14 @@ const ExcelGridView: React.FC<ExcelGridViewProps> = ({ ocId }) => {
         >
           ➕ Create New
         </button>
+        {currentRow && (
+          <button
+            onClick={duplicateRow}
+            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+          >
+            📋 Duplicate Row
+          </button>
+        )}
         <button
           onClick={async () => {
             setSaving(true);
@@ -739,7 +777,7 @@ const ExcelGridView: React.FC<ExcelGridViewProps> = ({ ocId }) => {
           }}
           disabled={saving}
           className={`px-4 py-2 text-white rounded flex items-center gap-2 ${
-            saving 
+            saving
               ? 'bg-gray-400 cursor-not-allowed' 
               : 'bg-blue-500 hover:bg-blue-600'
           }`}
@@ -873,9 +911,13 @@ const ExcelGridView: React.FC<ExcelGridViewProps> = ({ ocId }) => {
           wizardRows.map((row, rowIndex) => (
             <div
               key={`row-${row.id}-${rowIndex}`}
-              className={`relative flex border-b border-gray-200 hover:bg-gray-50 ${
+              className={`relative flex hover:bg-gray-50 ${
                 currentRow === row.id 
-                  ? 'bg-blue-200 border-blue-400 shadow-sm text-black' 
+                  ? 'border-2 border-blue-500 bg-blue-50 shadow-sm' 
+                  : 'border-b border-gray-200'
+              } ${
+                currentRow === row.id 
+                  ? '' 
                   : rowIndex % 2 === 0 
                     ? 'bg-white' 
                     : 'bg-gray-50'
@@ -887,14 +929,18 @@ const ExcelGridView: React.FC<ExcelGridViewProps> = ({ ocId }) => {
                 setCurrentColumn(0);
               }}
             >
+              {/* Pointer finger for selected row - moved outside grid */}
+              {currentRow === row.id && (
+                <div className="absolute -left-12 top-1/2 transform -translate-y-1/2 z-20 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">
+                  ▶
+                </div>
+              )}
 
               {/* Data Columns */}
               {columnConfig.map((col, colIndex) => (
            <div
              key={colIndex}
-             className={`${col.cellBgColor} border-r border-gray-300 px-2 py-2 text-sm flex-shrink-0 ${
-               currentRow === row.id ? 'text-black' : ''
-             }`}
+             className={`${col.cellBgColor} border-r border-gray-300 px-2 py-2 text-sm flex-shrink-0`}
              style={{ width: col.width }}
            >
                   {renderCell(row, col, rowIndex)}
