@@ -114,6 +114,10 @@ export class DatabaseService {
           await this.connect();
         }
 
+        if (!this.pool) {
+          throw new Error('Database connection not established after reconnect');
+        }
+
         const request = this.pool.request();
         
         // Generate a new UUID for the database (ignore the temp ID from frontend)
@@ -264,6 +268,10 @@ export class DatabaseService {
           console.log('DatabaseService: Connection lost, resetting pool...');
           this.pool = null;
           await this.connect();
+        }
+
+        if (!this.pool) {
+          throw new Error('Database connection not established after reconnect');
         }
 
         const request = this.pool.request();
