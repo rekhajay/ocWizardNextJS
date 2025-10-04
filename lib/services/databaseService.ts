@@ -50,12 +50,14 @@ export class DatabaseService {
   async connect(): Promise<void> {
     // Check if pool exists and is connected
     if (this.pool && this.pool.connected) {
+      console.log('DatabaseService: Using existing connection');
       return;
     }
 
     // Close existing pool if it exists but is not connected
     if (this.pool) {
       try {
+        console.log('DatabaseService: Closing existing disconnected pool');
         await this.pool.close();
       } catch (error) {
         console.log('Error closing existing pool:', error);
@@ -64,12 +66,13 @@ export class DatabaseService {
     }
 
     try {
+      console.log('DatabaseService: Creating new connection...');
       const config = getConfig();
       this.pool = new sql.ConnectionPool(config);
       await this.pool.connect();
-      console.log('Successfully connected to Azure SQL Database using OAuth');
+      console.log('DatabaseService: Successfully connected to Azure SQL Database using OAuth');
     } catch (error) {
-      console.error('Failed to connect to Azure SQL Database:', error);
+      console.error('DatabaseService: Failed to connect to Azure SQL Database:', error);
       this.pool = null;
       throw error;
     }
@@ -102,6 +105,13 @@ export class DatabaseService {
         
         if (!this.pool) {
           throw new Error('Database connection not established');
+        }
+
+        // Verify connection is still valid before proceeding
+        if (!this.pool.connected) {
+          console.log('DatabaseService: Connection lost, resetting pool...');
+          this.pool = null;
+          await this.connect();
         }
 
         const request = this.pool.request();
@@ -247,6 +257,13 @@ export class DatabaseService {
         
         if (!this.pool) {
           throw new Error('Database connection not established');
+        }
+
+        // Verify connection is still valid before proceeding
+        if (!this.pool.connected) {
+          console.log('DatabaseService: Connection lost, resetting pool...');
+          this.pool = null;
+          await this.connect();
         }
 
         const request = this.pool.request();

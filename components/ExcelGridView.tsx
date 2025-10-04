@@ -29,9 +29,10 @@ const ExcelGridView: React.FC<ExcelGridViewProps> = ({ ocId }) => {
         const result = await response.json();
         const allRows: CPIFDocument[] = result.data || [];
         
-        // Filter rows by the ocId
+        // Filter rows by the ocId and sort by creation order (oldest first, newest at bottom)
         const filteredRows = ocId ? allRows.filter(row => row.ocId === ocId) : allRows;
-        setWizardRows(filteredRows);
+        const sortedRows = filteredRows.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+        setWizardRows(sortedRows);
         
         // Mark existing rows as already saved
         const existingRowIds = new Set(filteredRows.map(row => row.id));
@@ -729,7 +730,6 @@ const ExcelGridView: React.FC<ExcelGridViewProps> = ({ ocId }) => {
             try {
               await saveAllRows();
               console.log('All rows saved successfully!');
-              alert('All rows saved successfully!');
             } catch (error) {
               console.error('Failed to save rows:', error);
               alert('Failed to save rows. Check console for details.');
