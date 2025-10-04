@@ -48,16 +48,30 @@ export class DatabaseService {
   private pool: sql.ConnectionPool | null = null;
 
   async connect(): Promise<void> {
-    if (!this.pool) {
+    // Check if pool exists and is connected
+    if (this.pool && this.pool.connected) {
+      return;
+    }
+
+    // Close existing pool if it exists but is not connected
+    if (this.pool) {
       try {
-        const config = getConfig();
-        this.pool = new sql.ConnectionPool(config);
-        await this.pool.connect();
-        console.log('Successfully connected to Azure SQL Database using OAuth');
+        await this.pool.close();
       } catch (error) {
-        console.error('Failed to connect to Azure SQL Database:', error);
-        throw error;
+        console.log('Error closing existing pool:', error);
       }
+      this.pool = null;
+    }
+
+    try {
+      const config = getConfig();
+      this.pool = new sql.ConnectionPool(config);
+      await this.pool.connect();
+      console.log('Successfully connected to Azure SQL Database using OAuth');
+    } catch (error) {
+      console.error('Failed to connect to Azure SQL Database:', error);
+      this.pool = null;
+      throw error;
     }
   }
 
@@ -78,46 +92,77 @@ export class DatabaseService {
       tenantId: process.env.AZURE_TENANT_ID ? 'SET' : 'NOT SET'
     });
     
-    await this.connect();
-    
-    if (!this.pool) {
-      throw new Error('Database connection not established');
+    const maxRetries = 3;
+    let lastError: any;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        await this.connect();
+        console.log('DatabaseService: Connection established successfully');
+        
+        if (!this.pool) {
+          throw new Error('Database connection not established');
+        }
+
+        const request = this.pool.request();
+        
+        // Generate a new UUID for the database (ignore the temp ID from frontend)
+        const dbId = `cpif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        console.log('DatabaseService: Generated new ID:', dbId);
+        
+        // Insert CPIF document
+        console.log('DatabaseService: Starting SQL INSERT...');
+        const result = await request
+          .input('id', sql.VarChar(50), dbId)
+          .input('timestamp', sql.DateTime2, cpifData.timestamp)
+          .input('createdBy', sql.VarChar(100), cpifData.createdBy)
+          .input('wizardType', sql.VarChar(100), cpifData.wizardType)
+          .input('ocId', sql.VarChar(50), cpifData.ocId || null)
+          .input('status', sql.VarChar(50), cpifData.status)
+          .input('lastModified', sql.DateTime2, cpifData.lastModified)
+          .input('version', sql.Int, cpifData.version)
+          .input('accountInfo', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.accountInfo))
+          .input('workdayInfo', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.workdayInfo))
+          .input('taxAdmin', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.taxAdmin))
+          .input('peTms', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.peTms))
+          .input('invoice', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.invoice))
+          .input('engagement', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.engagement))
+          .input('peteKlinger', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.peteKlinger))
+          .input('revenueForecast', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.revenueForecast))
+          .input('onboarding', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.onboarding))
+          .query(`
+            INSERT INTO CPIFDocuments (
+              id, timestamp, createdBy, wizardType, ocId, status, lastModified, version,
+              accountInfo, workdayInfo, taxAdmin, peTms, invoice,
+              engagement, peteKlinger, revenueForecast, onboarding
+            ) VALUES (
+              @id, @timestamp, @createdBy, @wizardType, @ocId, @status, @lastModified, @version,
+              @accountInfo, @workdayInfo, @taxAdmin, @peTms, @invoice,
+              @engagement, @peteKlinger, @revenueForecast, @onboarding
+            )
+          `);
+        
+        console.log('DatabaseService: SQL INSERT completed successfully');
+        return dbId;
+      } catch (error: any) {
+        lastError = error;
+        console.error(`DatabaseService: Save attempt ${attempt} failed:`, error?.message);
+        
+        // If it's a connection error, reset the pool
+        if (error?.code === 'ECONNCLOSED' || error?.message?.includes('Connection is closed')) {
+          console.log('DatabaseService: Connection closed, resetting pool...');
+          this.pool = null;
+        }
+        
+        // If this is the last attempt, throw the error
+        if (attempt === maxRetries) {
+          throw lastError;
+        }
+        
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
     }
-
-    const request = this.pool.request();
-    
-    // Insert CPIF document
-    const result = await request
-      .input('id', sql.VarChar(50), cpifData.id)
-      .input('timestamp', sql.DateTime2, cpifData.timestamp)
-      .input('createdBy', sql.VarChar(100), cpifData.createdBy)
-      .input('wizardType', sql.VarChar(100), cpifData.wizardType)
-      .input('ocId', sql.VarChar(50), cpifData.ocId || null)
-      .input('status', sql.VarChar(50), cpifData.status)
-      .input('lastModified', sql.DateTime2, cpifData.lastModified)
-      .input('version', sql.Int, cpifData.version)
-      .input('accountInfo', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.accountInfo))
-      .input('workdayInfo', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.workdayInfo))
-      .input('taxAdmin', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.taxAdmin))
-      .input('peTms', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.peTms))
-      .input('invoice', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.invoice))
-      .input('engagement', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.engagement))
-      .input('peteKlinger', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.peteKlinger))
-      .input('revenueForecast', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.revenueForecast))
-      .input('onboarding', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.onboarding))
-      .query(`
-        INSERT INTO CPIFDocuments (
-          id, timestamp, createdBy, wizardType, ocId, status, lastModified, version,
-          accountInfo, workdayInfo, taxAdmin, peTms, invoice,
-          engagement, peteKlinger, revenueForecast, onboarding
-        ) VALUES (
-          @id, @timestamp, @createdBy, @wizardType, @ocId, @status, @lastModified, @version,
-          @accountInfo, @workdayInfo, @taxAdmin, @peTms, @invoice,
-          @engagement, @peteKlinger, @revenueForecast, @onboarding
-        )
-      `);
-
-    return cpifData.id;
   }
 
   async getCPIF(id: string): Promise<CPIFDocument | null> {
@@ -190,51 +235,78 @@ export class DatabaseService {
   }
 
   async updateCPIF(cpifData: CPIFDocument): Promise<void> {
-    await this.connect();
-    
-    if (!this.pool) {
-      throw new Error('Database connection not established');
-    }
+    const maxRetries = 3;
+    let lastError: any;
 
-    const request = this.pool.request();
-    await request
-      .input('id', sql.VarChar(50), cpifData.id)
-      .input('timestamp', sql.DateTime2, cpifData.timestamp)
-      .input('createdBy', sql.VarChar(100), cpifData.createdBy)
-      .input('wizardType', sql.VarChar(100), cpifData.wizardType)
-      .input('ocId', sql.VarChar(50), cpifData.ocId || null)
-      .input('status', sql.VarChar(50), cpifData.status)
-      .input('lastModified', sql.DateTime2, cpifData.lastModified)
-      .input('version', sql.Int, cpifData.version)
-      .input('accountInfo', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.accountInfo))
-      .input('workdayInfo', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.workdayInfo))
-      .input('taxAdmin', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.taxAdmin))
-      .input('peTms', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.peTms))
-      .input('invoice', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.invoice))
-      .input('engagement', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.engagement))
-      .input('peteKlinger', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.peteKlinger))
-      .input('revenueForecast', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.revenueForecast))
-      .input('onboarding', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.onboarding))
-      .query(`
-        UPDATE CPIFDocuments SET
-          timestamp = @timestamp,
-          createdBy = @createdBy,
-          wizardType = @wizardType,
-          ocId = @ocId,
-          status = @status,
-          lastModified = @lastModified,
-          version = @version,
-          accountInfo = @accountInfo,
-          workdayInfo = @workdayInfo,
-          taxAdmin = @taxAdmin,
-          peTms = @peTms,
-          invoice = @invoice,
-          engagement = @engagement,
-          peteKlinger = @peteKlinger,
-          revenueForecast = @revenueForecast,
-          onboarding = @onboarding
-        WHERE id = @id
-      `);
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        await this.connect();
+        
+        if (!this.pool) {
+          throw new Error('Database connection not established');
+        }
+
+        const request = this.pool.request();
+        await request
+          .input('id', sql.VarChar(50), cpifData.id)
+          .input('timestamp', sql.DateTime2, cpifData.timestamp)
+          .input('createdBy', sql.VarChar(100), cpifData.createdBy)
+          .input('wizardType', sql.VarChar(100), cpifData.wizardType)
+          .input('ocId', sql.VarChar(50), cpifData.ocId || null)
+          .input('status', sql.VarChar(50), cpifData.status)
+          .input('lastModified', sql.DateTime2, cpifData.lastModified)
+          .input('version', sql.Int, cpifData.version)
+          .input('accountInfo', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.accountInfo))
+          .input('workdayInfo', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.workdayInfo))
+          .input('taxAdmin', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.taxAdmin))
+          .input('peTms', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.peTms))
+          .input('invoice', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.invoice))
+          .input('engagement', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.engagement))
+          .input('peteKlinger', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.peteKlinger))
+          .input('revenueForecast', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.revenueForecast))
+          .input('onboarding', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.onboarding))
+          .query(`
+            UPDATE CPIFDocuments SET
+              timestamp = @timestamp,
+              createdBy = @createdBy,
+              wizardType = @wizardType,
+              ocId = @ocId,
+              status = @status,
+              lastModified = @lastModified,
+              version = @version,
+              accountInfo = @accountInfo,
+              workdayInfo = @workdayInfo,
+              taxAdmin = @taxAdmin,
+              peTms = @peTms,
+              invoice = @invoice,
+              engagement = @engagement,
+              peteKlinger = @peteKlinger,
+              revenueForecast = @revenueForecast,
+              onboarding = @onboarding
+            WHERE id = @id
+          `);
+        
+        console.log('DatabaseService: Successfully updated CPIF document');
+        return; // Success, exit retry loop
+      } catch (error: any) {
+        lastError = error;
+        console.error(`DatabaseService: Update attempt ${attempt} failed:`, error?.message);
+        
+        // If it's a connection error, reset the pool
+        if (error?.code === 'ECONNCLOSED' || error?.message?.includes('Connection is closed')) {
+          console.log('DatabaseService: Connection closed, resetting pool...');
+          this.pool = null;
+        }
+        
+        // If this is the last attempt, throw the error
+        if (attempt === maxRetries) {
+          throw lastError;
+        }
+        
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
+    }
   }
 
   async deleteCPIF(id: string): Promise<void> {
