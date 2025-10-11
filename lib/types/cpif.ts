@@ -104,6 +104,7 @@ export interface CPIFDocument {
   createdBy: string; // Azure AD user ID
   wizardType: 'New Client-Entity (Need a CUS#)' | 'New Project (Have a CUS#)' | 'Use if Opportunity is in CRM' | 'New Container';
   ocId?: string; // Opportunity Container ID this wizard row belongs to
+  displayOrder: number; // Custom display order for Excel-like flexibility
   
   // Form sections
   accountInfo: AccountInfo;

@@ -19,6 +19,7 @@ const ExcelGridView: React.FC<ExcelGridViewProps> = ({ ocId }) => {
   const [saving, setSaving] = useState(false);
   const [savedRowIds, setSavedRowIds] = useState<Set<string>>(new Set());
   const [modifiedRowIds, setModifiedRowIds] = useState<Set<string>>(new Set());
+  const [hoveredInsertionPoint, setHoveredInsertionPoint] = useState<number | null>(null);
 
   // Load wizard rows
   const loadWizardRows = async () => {
@@ -29,9 +30,9 @@ const ExcelGridView: React.FC<ExcelGridViewProps> = ({ ocId }) => {
         const result = await response.json();
         const allRows: CPIFDocument[] = result.data || [];
         
-        // Filter rows by the ocId and sort by creation order (oldest first, newest at bottom)
+        // Filter rows by the ocId and sort by displayOrder (preserves custom order)
         const filteredRows = ocId ? allRows.filter(row => row.ocId === ocId) : allRows;
-        const sortedRows = filteredRows.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+        const sortedRows = filteredRows.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
         setWizardRows(sortedRows);
         
         // Mark existing rows as already saved
@@ -160,6 +161,7 @@ const ExcelGridView: React.FC<ExcelGridViewProps> = ({ ocId }) => {
       status: 'Draft',
       lastModified: new Date().toISOString(),
       version: 1,
+      displayOrder: wizardRows.length > 0 ? Math.max(...wizardRows.map(r => r.displayOrder || 0)) + 1 : 1,
       accountInfo: {
         legalName: '',
         primaryContact: '',
@@ -282,13 +284,268 @@ const ExcelGridView: React.FC<ExcelGridViewProps> = ({ ocId }) => {
       timestamp: new Date().toISOString(),
       lastModified: new Date().toISOString(),
       version: 1,
-      status: 'Draft'
+      status: 'Draft',
+      displayOrder: selectedRow.displayOrder + 0.5 // Insert after selected row
     };
     
     setWizardRows(prev => [...prev, duplicatedRow]);
     setEditingRow(duplicatedRow.id);
     setEditingField(columnConfig[0].key);
     setCurrentRow(duplicatedRow.id);
+    setCurrentColumn(0);
+  };
+
+  // Insert new row before selected row
+  const insertRowBefore = () => {
+    if (!currentRow) {
+      alert('Please select a row to insert before');
+      return;
+    }
+
+    const selectedRow = wizardRows.find(row => row.id === currentRow);
+    if (!selectedRow) {
+      alert('Selected row not found');
+      return;
+    }
+
+    const newRow: CPIFDocument = {
+      id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: new Date().toISOString(),
+      createdBy: 'Current User',
+      wizardType: 'New Container',
+      ocId: ocId,
+      status: 'Draft',
+      lastModified: new Date().toISOString(),
+      version: 1,
+      displayOrder: selectedRow.displayOrder - 0.5, // Insert before selected row
+      accountInfo: {
+        legalName: '',
+        primaryContact: '',
+        primaryContactTitle: '',
+        primaryContactEmail: '',
+        industry: '',
+        entityType: '',
+        address: '',
+        city: '',
+        state: '',
+        zipCode: '',
+        productService: '',
+        estOpptyValue: '',
+        opportunityPartner: undefined,
+        taxDeliveryPartner: undefined,
+        bdSalesSupport: '',
+        leadSource: '',
+        leadSourceDetails: '',
+        lsFreeText: '',
+        referringEmployee: undefined
+      },
+      workdayInfo: {
+        needProjectInWorkday: false,
+        customerCollectionsLead: undefined,
+        projectDeliveryLead: undefined,
+        projectManager: undefined,
+        asstProjectManager: undefined,
+        projectBillingSpecialist: undefined,
+        serviceCode: '',
+        taxYearEnd: '',
+        renewableProject: false,
+        projectStartDate: '',
+        projectEndDate: '',
+        taxForm: '',
+        nextDueDate: '',
+        dateOfDeath: '',
+        contractType: '',
+        totalEstimatedHours: 0,
+        estimatedRealizationYear1: '',
+        contractRateSheet: '',
+        totalContractAmount: 0,
+        adminFeePercent: '',
+        adminFeeIncludedExcluded: 'Included',
+        onboardingFeePercent: '',
+        onboardingFeeAmount: 0,
+        suggestedWorkdayParentName: ''
+      },
+      taxAdmin: {
+        elSigned: false,
+        authorized7216: false
+      },
+      peTms: {
+        connectedToPEOrTMS: '',
+        nameOfRelatedPEFundTMSCustomer: ''
+      },
+      invoice: {
+        invoiceType: '',
+        consolidatedBillingCustomerName: '',
+        consolidatedBillingExistingSchedule: '',
+        additionalCustomerContacts: '',
+        additionalCustomerContactEmails: '',
+        invoiceRecipientNames: '',
+        invoiceRecipientEmails: ''
+      },
+      engagement: {
+        partnerSigningEL: '',
+        consultingServicesDescription: ''
+      },
+      peteKlinger: {
+        documentDelivery: '',
+        invoiceMemo: '',
+        billToContact: ''
+      },
+      revenueForecast: {
+        October2025: 0,
+        November2025: 0,
+        December2025: 0,
+        January2026: 0,
+        February2026: 0,
+        March2026: 0,
+        April2026: 0,
+        May2026: 0,
+        June2026: 0,
+        July2026: 0,
+        August2026: 0,
+        September2026: 0,
+        balance: 0
+      },
+      onboarding: {
+        accountGUID: '',
+        opportunityGUID: '',
+        opportunityName: ''
+      }
+    };
+    
+    // Insert the new row at the correct position in the array (before selected row)
+    const currentIndex = wizardRows.findIndex(row => row.id === currentRow);
+    setWizardRows(prev => {
+      const newArray = [...prev];
+      newArray.splice(currentIndex, 0, newRow);
+      return newArray;
+    });
+    setEditingRow(newRow.id);
+    setEditingField(columnConfig[0].key);
+    setCurrentRow(newRow.id);
+    setCurrentColumn(0);
+  };
+
+  // Insert new row at specific position
+  const insertRowAtPosition = (insertionIndex: number) => {
+    const newRow: CPIFDocument = {
+      id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: new Date().toISOString(),
+      createdBy: 'Current User',
+      wizardType: 'New Container',
+      ocId: ocId,
+      status: 'Draft',
+      lastModified: new Date().toISOString(),
+      version: 1,
+      displayOrder: insertionIndex === 0 
+        ? (wizardRows[0]?.displayOrder || 1) - 0.5  // Insert before first row
+        : insertionIndex >= wizardRows.length
+          ? (wizardRows[wizardRows.length - 1]?.displayOrder || wizardRows.length) + 0.5  // Insert after last row
+          : (wizardRows[insertionIndex - 1]?.displayOrder || insertionIndex) + 0.5,  // Insert between rows
+      accountInfo: {
+        legalName: '',
+        primaryContact: '',
+        primaryContactTitle: '',
+        primaryContactEmail: '',
+        industry: '',
+        entityType: '',
+        address: '',
+        city: '',
+        state: '',
+        zipCode: '',
+        productService: '',
+        estOpptyValue: '',
+        opportunityPartner: undefined,
+        taxDeliveryPartner: undefined,
+        bdSalesSupport: '',
+        leadSource: '',
+        leadSourceDetails: '',
+        lsFreeText: '',
+        referringEmployee: undefined
+      },
+      workdayInfo: {
+        needProjectInWorkday: false,
+        customerCollectionsLead: undefined,
+        projectDeliveryLead: undefined,
+        projectManager: undefined,
+        asstProjectManager: undefined,
+        projectBillingSpecialist: undefined,
+        serviceCode: '',
+        taxYearEnd: '',
+        renewableProject: false,
+        projectStartDate: '',
+        projectEndDate: '',
+        taxForm: '',
+        nextDueDate: '',
+        dateOfDeath: '',
+        contractType: '',
+        totalEstimatedHours: 0,
+        estimatedRealizationYear1: '',
+        contractRateSheet: '',
+        totalContractAmount: 0,
+        adminFeePercent: '',
+        adminFeeIncludedExcluded: 'Included',
+        onboardingFeePercent: '',
+        onboardingFeeAmount: 0,
+        suggestedWorkdayParentName: ''
+      },
+      taxAdmin: {
+        elSigned: false,
+        authorized7216: false
+      },
+      peTms: {
+        connectedToPEOrTMS: '',
+        nameOfRelatedPEFundTMSCustomer: ''
+      },
+      invoice: {
+        invoiceType: '',
+        consolidatedBillingCustomerName: '',
+        consolidatedBillingExistingSchedule: '',
+        additionalCustomerContacts: '',
+        additionalCustomerContactEmails: '',
+        invoiceRecipientNames: '',
+        invoiceRecipientEmails: ''
+      },
+      engagement: {
+        partnerSigningEL: '',
+        consultingServicesDescription: ''
+      },
+      peteKlinger: {
+        documentDelivery: '',
+        invoiceMemo: '',
+        billToContact: ''
+      },
+      revenueForecast: {
+        October2025: 0,
+        November2025: 0,
+        December2025: 0,
+        January2026: 0,
+        February2026: 0,
+        March2026: 0,
+        April2026: 0,
+        May2026: 0,
+        June2026: 0,
+        July2026: 0,
+        August2026: 0,
+        September2026: 0,
+        balance: 0
+      },
+      onboarding: {
+        accountGUID: '',
+        opportunityGUID: '',
+        opportunityName: ''
+      }
+    };
+    
+    // Insert the new row at the specified position
+    setWizardRows(prev => {
+      const newArray = [...prev];
+      newArray.splice(insertionIndex, 0, newRow);
+      return newArray;
+    });
+    setEditingRow(newRow.id);
+    setEditingField(columnConfig[0].key);
+    setCurrentRow(newRow.id);
     setCurrentColumn(0);
   };
 
@@ -908,46 +1165,102 @@ const ExcelGridView: React.FC<ExcelGridViewProps> = ({ ocId }) => {
             No wizard rows found. Click "Create New" to get started.
           </div>
         ) : (
-          wizardRows.map((row, rowIndex) => (
-            <div
-              key={`row-${row.id}-${rowIndex}`}
-              className={`relative flex hover:bg-gray-50 ${
-                currentRow === row.id 
-                  ? 'border-2 border-blue-500 bg-blue-50 shadow-sm' 
-                  : 'border-b border-gray-200'
-              } ${
-                currentRow === row.id 
-                  ? '' 
-                  : rowIndex % 2 === 0 
-                    ? 'bg-white' 
-                    : 'bg-gray-50'
-              }`}
-              onMouseEnter={() => setHoveredRow(row.id)}
-              onMouseLeave={() => setHoveredRow(null)}
-              onClick={() => {
-                setCurrentRow(row.id);
-                setCurrentColumn(0);
-              }}
+          <>
+            {/* Plus button for inserting at the beginning */}
+            <div 
+              className="relative flex items-center hover:bg-blue-100 transition-colors duration-200"
+              onMouseEnter={() => setHoveredInsertionPoint(0)}
+              onMouseLeave={() => setHoveredInsertionPoint(null)}
             >
-              {/* Pointer finger for selected row - moved outside grid */}
-              {currentRow === row.id && (
-                <div className="absolute -left-12 top-1/2 transform -translate-y-1/2 z-20 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">
-                  ▶
-                </div>
+              {/* Plus button */}
+              {hoveredInsertionPoint === 0 && (
+                <button
+                  onClick={() => insertRowAtPosition(0)}
+                  className="absolute left-2 top-1/2 transform -translate-y-1/2 z-30 bg-blue-500 hover:bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold shadow-lg transition-all duration-200 hover:scale-110"
+                  title="Insert new row here"
+                >
+                  +
+                </button>
               )}
-
-              {/* Data Columns */}
-              {columnConfig.map((col, colIndex) => (
-           <div
-             key={colIndex}
-             className={`${col.cellBgColor} border-r border-gray-300 px-2 py-2 text-sm flex-shrink-0`}
-             style={{ width: col.width }}
-           >
-                  {renderCell(row, col, rowIndex)}
-                </div>
-              ))}
+              
+              {/* Highlight line */}
+              {hoveredInsertionPoint === 0 && (
+                <div className="absolute left-0 right-0 top-0 h-0.5 bg-blue-500 z-20"></div>
+              )}
+              
+              {/* Empty row for spacing */}
+              <div className="w-full h-8"></div>
             </div>
-          ))
+
+            {wizardRows.map((row, rowIndex) => (
+              <div key={`row-${row.id}-${rowIndex}`}>
+                {/* Row content */}
+                <div
+                  className={`relative flex hover:bg-gray-50 ${
+                    currentRow === row.id 
+                      ? 'border-2 border-blue-500 bg-blue-50 shadow-sm' 
+                      : 'border-b border-gray-200'
+                  } ${
+                    currentRow === row.id 
+                      ? '' 
+                      : rowIndex % 2 === 0 
+                        ? 'bg-white' 
+                        : 'bg-gray-50'
+                  }`}
+                  onMouseEnter={() => setHoveredRow(row.id)}
+                  onMouseLeave={() => setHoveredRow(null)}
+                  onClick={() => {
+                    setCurrentRow(row.id);
+                    setCurrentColumn(0);
+                  }}
+                >
+                  {/* Pointer finger for selected row - moved outside grid */}
+                  {currentRow === row.id && (
+                    <div className="absolute -left-12 top-1/2 transform -translate-y-1/2 z-20 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">
+                      ▶
+                    </div>
+                  )}
+
+                  {/* Data Columns */}
+                  {columnConfig.map((col, colIndex) => (
+                    <div
+                      key={colIndex}
+                      className={`${col.cellBgColor} border-r border-gray-300 px-2 py-2 text-sm flex-shrink-0`}
+                      style={{ width: col.width }}
+                    >
+                      {renderCell(row, col, rowIndex)}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Plus button for inserting after this row */}
+                <div 
+                  className="relative flex items-center hover:bg-blue-100 transition-colors duration-200"
+                  onMouseEnter={() => setHoveredInsertionPoint(rowIndex + 1)}
+                  onMouseLeave={() => setHoveredInsertionPoint(null)}
+                >
+                  {/* Plus button */}
+                  {hoveredInsertionPoint === rowIndex + 1 && (
+                    <button
+                      onClick={() => insertRowAtPosition(rowIndex + 1)}
+                      className="absolute left-2 top-1/2 transform -translate-y-1/2 z-30 bg-blue-500 hover:bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold shadow-lg transition-all duration-200 hover:scale-110"
+                      title="Insert new row here"
+                    >
+                      +
+                    </button>
+                  )}
+                  
+                  {/* Highlight line */}
+                  {hoveredInsertionPoint === rowIndex + 1 && (
+                    <div className="absolute left-0 right-0 top-0 h-0.5 bg-blue-500 z-20"></div>
+                  )}
+                  
+                  {/* Empty row for spacing */}
+                  <div className="w-full h-8"></div>
+                </div>
+              </div>
+            ))}
+          </>
         )}
       </div>
     </div>

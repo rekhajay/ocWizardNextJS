@@ -135,6 +135,7 @@ export class DatabaseService {
           .input('status', sql.VarChar(50), cpifData.status)
           .input('lastModified', sql.DateTime2, cpifData.lastModified)
           .input('version', sql.Int, cpifData.version)
+          .input('displayOrder', sql.Decimal(10, 2), cpifData.displayOrder || 0)
           .input('accountInfo', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.accountInfo))
           .input('workdayInfo', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.workdayInfo))
           .input('taxAdmin', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.taxAdmin))
@@ -146,11 +147,11 @@ export class DatabaseService {
           .input('onboarding', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.onboarding))
           .query(`
             INSERT INTO CPIFDocuments (
-              id, timestamp, createdBy, wizardType, ocId, status, lastModified, version,
+              id, timestamp, createdBy, wizardType, ocId, status, lastModified, version, displayOrder,
               accountInfo, workdayInfo, taxAdmin, peTms, invoice,
               engagement, peteKlinger, revenueForecast, onboarding
             ) VALUES (
-              @id, @timestamp, @createdBy, @wizardType, @ocId, @status, @lastModified, @version,
+              @id, @timestamp, @createdBy, @wizardType, @ocId, @status, @lastModified, @version, @displayOrder,
               @accountInfo, @workdayInfo, @taxAdmin, @peTms, @invoice,
               @engagement, @peteKlinger, @revenueForecast, @onboarding
             )
@@ -208,6 +209,7 @@ export class DatabaseService {
       status: record.status,
       lastModified: record.lastModified,
       version: record.version,
+      displayOrder: record.displayOrder || 0,
       accountInfo: JSON.parse(record.accountInfo),
       workdayInfo: JSON.parse(record.workdayInfo),
       taxAdmin: JSON.parse(record.taxAdmin),
@@ -239,6 +241,7 @@ export class DatabaseService {
       status: record.status,
       lastModified: record.lastModified,
       version: record.version,
+      displayOrder: record.displayOrder || 0,
       accountInfo: JSON.parse(record.accountInfo),
       workdayInfo: JSON.parse(record.workdayInfo),
       taxAdmin: JSON.parse(record.taxAdmin),
@@ -284,6 +287,7 @@ export class DatabaseService {
           .input('status', sql.VarChar(50), cpifData.status)
           .input('lastModified', sql.DateTime2, cpifData.lastModified)
           .input('version', sql.Int, cpifData.version)
+          .input('displayOrder', sql.Decimal(10, 2), cpifData.displayOrder || 0)
           .input('accountInfo', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.accountInfo))
           .input('workdayInfo', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.workdayInfo))
           .input('taxAdmin', sql.NVarChar(sql.MAX), JSON.stringify(cpifData.taxAdmin))
@@ -302,6 +306,7 @@ export class DatabaseService {
               status = @status,
               lastModified = @lastModified,
               version = @version,
+              displayOrder = @displayOrder,
               accountInfo = @accountInfo,
               workdayInfo = @workdayInfo,
               taxAdmin = @taxAdmin,

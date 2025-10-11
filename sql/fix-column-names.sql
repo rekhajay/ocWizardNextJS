@@ -15,3 +15,5 @@ IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID('CPIFDocume
 BEGIN
     CREATE INDEX IX_CPIFDocuments_ocId ON CPIFDocuments(ocId);
 END
+
+
