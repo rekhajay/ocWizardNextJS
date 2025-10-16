@@ -40,7 +40,7 @@ export async function PUT(
     // Ensure the ID matches the URL parameter
     cpifData.id = params.id;
     
-    await dbService.updateCPIF(cpifData);
+    await dbService.updateCPIF(params.id, cpifData);
     return NextResponse.json({ success: true, data: { id: params.id } });
   } catch (error: any) {
     console.error('Error updating CPIF document:', error);

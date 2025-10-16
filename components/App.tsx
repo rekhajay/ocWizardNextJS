@@ -1321,7 +1321,7 @@ export default function App() {
                               }}
                               title="Excel Grid View - Edit all wizard data in spreadsheet format"
                             >
-                              Excel Grid View
+                              Excel New Client-Entity (Need Cus#)
                             </button>
                           </div>
                           <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-600">
